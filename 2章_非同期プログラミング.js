@@ -56,9 +56,11 @@ parseJSONAsync('不正なJSON',
   result => console.log('parse結果', result)
 );
 
+
 process.on('uncaughtException', err => {
   process.exit(1)
 })
+
 
 // parseJSONAsync()をNode.jsの規約に沿って書き直すと次のようになる
 function parseJSONAsync(json, callback) {
@@ -73,6 +75,8 @@ function parseJSONAsync(json, callback) {
 parseJSONAsync('不正なJSON',
   (err, result) => console.log('parse結果', err, result)
 )
+
+
 
 // 2.2.3混ぜるな危険、同期と非同期
 const cache = {}
@@ -100,15 +104,32 @@ parseJSONAsyncWithCache(
         console.log('2回目の結果', err, result)
       }
     )
-    console.log('2回目の呼び出し完了')
+    console.log('2回目の呼び出し完了');
   }
 )
 console.log('1回目の呼び出し完了');
 
+// テスト用でparseJSONAsyncを再定義
+
+// parseJSONAsync()をNode.jsの規約に沿って書き直すと次のようになる
+function parseJSONAsync(json, callback) {
+  setTimeout(() => {
+    try {
+      callback(null, JSON.parse(json))
+    } catch (err) {
+      callback(err)
+    }
+  }, 1000)
+}
+parseJSONAsync('不正なJSON',
+  (err, result) => console.log('parse結果', err, result)
+)
+
+
 // コールバックをパラメータとする関数は、同期的か非同期的かのどちらかで実装する
 const cache2 = {}
 function parseJSONAsyncWithCache(json, callback) {
-  const cached = cached[json]
+  const cached = cache2[json]
   if (cached) {
     // キャッシュに値が存在する場合でも、非同期的にコールバックを実行する
     setTimeout(() => callback(cached.err, cached.result), 0)
@@ -132,7 +153,7 @@ parseJSONAsyncWithCache(
         console.log('2回目の結果', err, result)
       }
     )
-    console.log('2回目の呼び出し完了')
+    console.log('2回目の呼び出し完了');
   }
 )
 console.log('1回目の呼び出し完了');
