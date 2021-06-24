@@ -276,3 +276,52 @@ first(input, (err, result) => {
   }
   // ...
 })
+
+try {
+  const result1 = syncFunc1(input)
+  const result2 = syncFunc2(result1)
+  const result3 = syncFunc3(result2)
+  const result4 = syncFunc4(result3)
+  // ...
+} catch (err) {
+  // エラーハンドリング
+}
+
+// 2.3 Promise
+asyncFunc1(input)
+  .then(asyncFunc2)
+  .then(asyncFunc3)
+  .then(asyncFunc4)
+  .then(result => {
+    // ...
+  })
+  .catch (err => {
+  // エラーハンドリング
+})
+
+// 2.3.1 Promiseインスタンスの生成と状態遷移
+function parseJSONAsync(json) {
+  // Promiseインスタンスを生成して返す(この時点ではpending状態)
+  return new Promise((resolve, reject) => 
+    setTimeout(() => {
+      try {
+      // fulfilled状態にする(解決)
+        resolve(JSON.parse(json))
+      } catch (err) {
+        // rejected状態にする(拒否)
+        reject(err)
+    }
+    }, 1000)
+  )
+}
+
+const toBeFulfilled = parseJSONAsync('{"foo": 1}')
+const toBeRejected = parseJSONAsync('不正なJSON')
+console.log('********** Promise生成直後 **********')
+console.log(toBeFulfilled)
+console.log(toBeRejected)
+setTimeout(() => {
+  console.log('********** 1秒後 **********')
+  console.log(toBeFulfilled)
+  console.log(toBeRejected)
+}, 1000)
