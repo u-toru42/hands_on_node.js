@@ -81,6 +81,7 @@ parseJSONAsync('不正なJSON',
 
 
 // 2.2.3混ぜるな危険、同期と非同期
+// 駄目な例
 const cache = {}
 function parseJSONAsyncWithCache(json, callback) {
   const cached = cache[json]
@@ -127,7 +128,7 @@ parseJSONAsync('不正なJSON',
   (err, result) => console.log('parse結果', err, result)
 )
 
-
+// 良い例
 // コールバックをパラメータとする関数は、同期的か非同期的かのどちらかで実装する
 const cache2 = {}
 function parseJSONAsyncWithCache(json, callback) {
@@ -295,9 +296,9 @@ asyncFunc1(input)
   .then(result => {
     // ...
   })
-  .catch (err => {
+  .catch (err) => {
   // エラーハンドリング
-})
+}
 
 // 2.3.1 Promiseインスタンスの生成と状態遷移
 function parseJSONAsync(json) {
@@ -325,3 +326,14 @@ setTimeout(() => {
   console.log(toBeFulfilled)
   console.log(toBeRejected)
 }, 1000)
+
+process.on(
+  'unhandledRejection',
+  (
+    err, // Promiseの拒否理由
+    promise // 放置されたrejectedなPromise
+  ) => {
+    // unhandleRejection発生の原因を調べられるよう、ログ出力などの対応を行う
+    console.log('unhandleRejection発生', err)
+  }
+)
