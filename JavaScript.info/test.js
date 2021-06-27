@@ -1,49 +1,34 @@
-// 関数pow(x, n)
+describe("pow", function() {
 
-function pow(x, n) {
-  let result = x;
-
-  for (let i = 1; i < n; i++) {
-    return *= x;
+  function makeTest(x) {
+    let expected = x * x * x;
+    it(`${x} in the power 3 is ${expected}`, function() {
+      assert.equal(pow(x, 3), expected);
+    });
   }
 
-  return result;
-}
-
-let x = prompt("x?", '');
-let n = prompt("n?", '');
-
-if (n <= 1) {
-  alert(`Power ${n} is not supported, use an integer greater than 0`);
-} else {
-  alert(pow(x, n));
-}
-
-// アロー関数を使った書き換え前
-function ask(question, yes, no) {
-  if (confirm(question)) yes()
-  else no();
-}
-
-ask(
-  "Do you agree?",
-  function() {
-    alert("You agreed.");
-  },
-  function() {
-    alert("You canceled the execution");
+  for (let x = 1; x <= 5; x++) {
+    makeTest(x);
   }
-);
 
-// アロー関数を使った書き換え後
+  it("for negative n th result is NaN", function() {
+    assert.isNaN(pow(2, -1));
+  });
 
-function ask(question, yes, no) {
-  if (confirm(question)) yes()
-  else no();
-}
+  it("for non-integer n the result is NaN", function() {
+    assert.isNaN(pow(2, 1.5));
+  });
 
-ask(
-  "Do you agree?",
-  () => alert("You agreed."),
-  () => alert("You canceled the execution.")
-)
+});
+
+descrive("test", function() {
+  before(() => alert("Testing started - before all tests"));
+  after(() => alert("Testing finished - after all tests"));
+
+  beforeEach(() => alert("Before a test - enter a test"));
+  afterEach(() => alert("After a test - exit a test"));
+
+  it("test 1", () => alert(1));
+  it("test 2", () => alert(2));
+
+});
