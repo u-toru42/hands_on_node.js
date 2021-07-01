@@ -296,9 +296,9 @@ asyncFunc1(input)
   .then(result => {
     // ...
   })
-  .catch (err) => {
+  .catch (err => {
   // エラーハンドリング
-}
+})
 
 // 2.3.1 Promiseインスタンスの生成と状態遷移
 function parseJSONAsync(json) {
