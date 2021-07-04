@@ -148,42 +148,72 @@ class createFizzBuzzEventEmitter extends event.EventEmitter {
       if (count >= until) {
         break
       }
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
+    this.emit('end')
   }
 }
 
-// イベントハンドリング
-function startListener() {
-  console.log('start')
-}
-function fizzListener(count) {
-  console.log('Fizz', count)
-}
-function buzzListener(count) {
-  console.log('Buzz', count)
-}
-function fizzBuzzListener(count) {
-  console.log('FizzBuzz', count)
-}
-function endListener() {
-  console.log('end')
-  this // thisはEventEmitterインスタンス
-  // 全てのイベントからリスナを削除する
-    .off('start', startListener)
-    .off('Fizz', fizzListener)
-    .off('Buzz', buzzListener)
-    .off('FizzBuzz', fizzBuzzListener)
-    .off('end', endListener)
-}
-
-createFizzBuzzEventEmitter(40)
-    .on('start', startListener)
-    .on('Fizz', fizzListener)
-    .on('Buzz', buzzListener)
-    .on('FizzBuzz', fizzBuzzListener)
-    .on('end', endListener)
-
-// リスナが実行されない
-createFizzBuzzEventEmitter(0)
+new createFizzBuzzEventEmitter()
   .on('start', startListener)
+  .on('Fizz', fizzListener)
+  .on('Buzz', buzzListener)
+  .on('FizzBuzz', fizzBuzzListener)
   .on('end', endListener)
+  .start(20)
+
+// 3.1.5 コールバックパターン形式でイベントリスナを登録する
+const http = require('http')
+
+// サーバオブジェクトの生成
+const server = http.createServer()
+
+// requestイベントのリスナ登録
+server.on('request', (req, res) => {
+  // クライアントからのリクエストに対する処理
+})
+
+// ポートの監視およびlisteningイベントのリスナ登録
+server.listen(8000, () => {
+  // ポートの待機を開始した際の処理
+})
+
+// 3.1.6 EventEmitterからのasyncイテラブルの生成
+
+const eventAEmitter = new events.EventEmitter()
+
+const eventAIterable = events.on(eventAEmitter, 'eventA')
+
+eventAEmitter.listeners('eventA')
+
+  (async () => {
+    for await (const a of eventAIterable) {
+      if (a[0] === 'end') {
+      // endが渡されたらループを抜ける
+        break
+      }
+      console.log('eventA', a)
+  }
+  })()
+
+eventAEmitter.emit('eventA', 'Hello')
+
+eventAEmitter.emit('eventA', 'Hello', 'World')
+
+eventAEmitter.emit('eventA', 'end')
+
+eventAEmitter.listeners('eventA')
+
+// 3.1.7 EventEmitterのPromise化
+const eventBEmitter = new events.EventEmitter()
+
+const eventBPromise = events.once(eventBEmitter, 'eventB')
+
+eventBPromise.then(arg => console.log('eventB発生', arg))
+
+eventBEmitter.emit('eventB', 'Hello', 'World')
+
+// 一度でもeventBが発行されたらeventBPromiseはfulfilledになるため、以降のイベント発行には反応しません。
+eventBEmitter.emit('eventB', 'one more')
+
+// ストリームまで
