@@ -1,3 +1,4 @@
+const { fstat } = require('fs')
 const http = require('http')
 
 // サーバオブジェクト(EventEmitterのインスタンス)の生成
@@ -164,6 +165,7 @@ new createFizzBuzzEventEmitter()
 
 // 3.1.5 コールバックパターン形式でイベントリスナを登録する
 const http = require('http')
+const { Stream } = require('stream')
 
 // サーバオブジェクトの生成
 const server = http.createServer()
@@ -216,4 +218,72 @@ eventBEmitter.emit('eventB', 'Hello', 'World')
 // 一度でもeventBが発行されたらeventBPromiseはfulfilledになるため、以降のイベント発行には反応しません。
 eventBEmitter.emit('eventB', 'one more')
 
-// ストリームまで
+// 3.2 ストリーム
+
+function copyFile(src, dest, cb) {
+  // ファイルの読み込み
+  fs.readFile(src, (err, data) => {
+    if (err) {
+      return cb(err)
+    }
+    // 読み込んだ内容を別のファイルに書き出す
+    fs.writeFile(dest, data, cb)
+  })
+}
+
+// 3.2.1 ストリームの基本
+function copyFileWithStream(src, dest, cb) {
+  // ファイルから読み込みストリームを生成
+  fs.createReadStream(src)
+  // ファイルから書き込みストリームを生成し、pipe()でつなぐ
+    .pipe(fs.createWriteStream(dest))
+  // 完了時にコールバックを呼び出す
+  .on('finish', cb)
+}
+
+// コピー元ファイルの生成
+fs.writeFileSync('src.txt', 'Hello, World!')
+
+// コピー実行
+copyFileWithStream('src.txt', 'dest.txt', () => console.log('コピー完了'))
+
+// 3.2.2 読み込みストリーム
+const readStream = fs.createReadStream('src.txt')
+readStream
+// readableイベントリスナの登録
+  .on('readable', () => {
+    console.log('readable')
+    let chunk
+    // 現在読み込み可能なデータをすべて読み込む
+    while ((chunk = readStream.read()) !== null) {
+      console.log(`chunk: ${chunk.toString()}`)
+    }
+  })
+// endイベントリスナの登録
+  .on('end', () => console.log('end'))
+
+class HelloReadableStream extends Stream.Readable {
+  constructor(options) {
+    super(options)
+    this.languages = ['JavaScript', 'Python', 'Java', 'C#']
+  }
+
+  _read(size) {
+    console.log('_read()')
+    let language
+    while ((language = this.languages.shift())) {
+      // push()でデータを流す
+      // ただし、push()がfalseを返したらそれ以上流さない
+      if (!this.push(`Hello, ${language}!\n`)) {
+        console.log('読み込み中断')
+        return
+      }
+    }
+    // 最後にnullを流してストリームの終了を通知する
+    console.log('読み込み完了')
+    this.push(null)
+  }
+}
+
+// では、この読み込みストリームからデータを読み込んでみましょう。
+// p127まで
