@@ -286,4 +286,97 @@ class HelloReadableStream extends Stream.Readable {
 }
 
 // では、この読み込みストリームからデータを読み込んでみましょう。
-// p127まで
+
+const helloReadableStream = new HelloReadableStream()
+helloReadableStream.on('readable', () => {
+  console.log('readable')
+  let chunk
+  while ((chunk = helloReadableStream.read()) !== null) {
+    console.log(`chunk: ${chunk.toString()}`)
+  }
+})
+  .on('end', () => console.log('end'))
+
+// メソッドを使って、ファイルへの書き込みを試してみましょう。
+
+const fileWriteStream = fs.createWriteStream('dest.txt')
+
+fileWriteStream.write('Hello\n')
+fileWriteStream.write('Hello\n')
+fileWriteStream.end()
+fs.readFileSync('dest.txt', 'utf8')
+
+// 書き込みストリームなので、実装すべきメソッドは_read()ではなく_write()です。
+class DelayLogStream extends Stream.Writable {
+  constructor(options){
+  // objectMode: trueを指定するとオブジェクトをデータとして流せる
+  super({ objectMode: true, ...options })
+  }
+  _write(chunk, encoding, callback) {
+    console.log('_write()')
+    // messageプロパティ(文字列), delayプロパティ(数値)を含むオブジェクトが
+    // データとして流れてくることを期待
+    const { message, delay } = chunk
+    // delayで指定した時間(ミリ秒)だけ遅れてmessageをログに出す
+    setTimeout(() => {
+      console.log(message)
+      callback()
+    }, delay)
+  }
+}
+
+const delayLogStream = new DelayLogStream()
+
+delayLogStream.write({ message: 'Hi', delay: 0 })
+delayLogStream.write({ message: 'Thank you', delay: 1000 })
+delayLogStream.end({ message: 'Bye', delay: 100 })
+
+// 3.2.4 二重ストリームと変換ストリーム
+
+// 文字列データを行単位でDelayLogStreamが受け取れる形式のオブジェクトに変換する
+// 変換ストリームを作ってみましょう。
+
+class LineTransformStream extends Stream.Transform {
+  // 上流から受け取ったデータの内、下流に流していない分を保持するフィールド
+  remaining = ''
+  construncto(options) {
+    // push()にオブジェクトを渡せるようにする
+    super({ readableObjectMode: true, ...options })
+  }
+
+  _transform(chunk, encoding, callback) {
+    console.log('_transform()')
+    const lines = (chunk + this.remaining).split(/\n/)
+    // 最後の行は次に入ってくるデータの先頭と同じ行になるため、変数に保持
+    this.remaining = lines.pop()
+    for (const line of lines) {
+      // ここではpush()の戻り値は気にしない
+      this.push({ message: line, delay: line.length * 100 })
+    }
+    callback()
+  }
+
+  _flush(callback) {
+    console.log('_flush()')
+    // 残っているデータを流し切る
+    this.push({
+      message: this.remaining,
+      delay: this.remaining.length * 100
+    })
+    callback()
+  }
+}
+
+const lineTransformStream = newLineTransformStream()
+lineTransformStream.on('readable', () => {
+  let chunk
+  while ((chunk = lineTransformStream.read()) !== null) {
+    console.log(chunk)
+  }
+})
+
+lineTransformStream.write('foo\nbar')
+
+lineTransformStream.write('baz')
+
+lineTransformStream.end()
