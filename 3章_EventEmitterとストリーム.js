@@ -380,3 +380,55 @@ lineTransformStream.write('foo\nbar')
 lineTransformStream.write('baz')
 
 lineTransformStream.end()
+
+// 3.2.5 pipe()によるストリームの連結
+new HelloReadableStream()
+  .pipe(new LineTransformStream())
+  .pipe(new DelayLogStream())
+  .on('finish', () => console.log('完了'))
+
+
+new HelloReadableStream({ highWaterMark: 0 })
+  .pipe(new LineTransformStream({
+  // 二重ストリームのhighWaterMarkはwriteとreadでそれぞれ指定が必要
+    writableHighWaterMark: 0,
+    readableHighWaterMark: 0
+  }))
+  .pipe(new DelayLogStream({ highWaterMark: 0 }))
+  .on('finish', () => console.log('完了'))
+
+const ltStream = new LineTransformStream()
+
+ltStream === new HelloReadableStream().pipe(ltStream)
+
+const srcReadStream = fs.createReadStream('src.txt')
+
+srcReadStream
+  .pipe(fs.createWriteStream('dest.txt'))
+  .on('finish', () => console.log('分岐1完了'))
+
+srcReadStream
+  .pipe(crypto.createHash('sha256'))
+  .pipe(fs.createWriteStream('dest.crypto.txt'))
+  .on('finish', () => console.log('分岐2完了'))
+
+// 3.2.6 エラーハンドリングとstream.pipeline()
+
+fs.createReadStream('no-such-file.txt')
+  .pipe(fs.createWriteStream('dest.txt'))
+  .on('error', err => console.log('エラーイベント', err.message))
+
+fs.createReadStream('no-such-file.txt')
+  .on('error', err => console.log('エラーイベント', err.message))
+  .pipe(fs.createWriteStream('dest.txt'))
+  .on('error', err => console.log('エラーイベント', err.message))
+
+Stream.pipeline(
+  // pipe()したい2つ以上のストリーム
+  fs.createReadStream('no-such-file.txt'),
+  fs.createWriteStream('dest.txt'),
+  // コールバック
+  err => err
+    ? console.error('エラー発生', err.message)
+    : console.log('正常終了')
+)
